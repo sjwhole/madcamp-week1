@@ -23,7 +23,7 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         super(fm);
         mContext = context;
         phoneFragmentList.add(new PhoneFragment());
-        phoneFragmentList.add(new PhoneFragment());
+        phoneFragmentList.add(new GalleryFragment());
         phoneFragmentList.add(new PhoneFragment());
     }
 
