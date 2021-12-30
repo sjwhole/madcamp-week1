@@ -100,10 +100,7 @@ public class GalleryFragment extends Fragment {
 //                row.setBackgroundColor(Color.parseColor("#ffff0000")); // for test
             }
 
-            int imageWidth = SCREEN_WIDTH / COLUMN_SIZE;
-            int imageHeight = SCREEN_WIDTH / COLUMN_SIZE;
-
-            ImageView iv = makeImageView(imageList.get(i), imageWidth, imageHeight);
+            ImageView iv = makeImageView(imageList.get(i), COLUMN_SIZE);
             row.addView(iv);
             if (i % COLUMN_SIZE == COLUMN_SIZE-1) {
                 // TableRow를 TableRayout에 추가
@@ -118,9 +115,11 @@ public class GalleryFragment extends Fragment {
         return rootView;
     }
 
-    private ImageView makeImageView(String imagePath, int width, int height) {
-        int IMAGE_WIDTH = width;
-        int IMAGE_HEIGHT = height;
+    private ImageView makeImageView(String imagePath, int columnSize) {
+        int SCREEN_WIDTH = getContext().getResources().getDisplayMetrics().widthPixels;
+        int MARGIN = SCREEN_WIDTH / 100;
+        int IMAGE_WIDTH = (SCREEN_WIDTH - 6*MARGIN) / columnSize;
+        int IMAGE_HEIGHT = IMAGE_WIDTH;
 
         ImageView iv = new ImageView(getActivity());
         iv.setScaleType(ImageView.ScaleType.CENTER_CROP); // 크기에 맞게 자르는 type
@@ -157,7 +156,7 @@ public class GalleryFragment extends Fragment {
         iv.setLayoutParams(new TableRow.LayoutParams(IMAGE_WIDTH, IMAGE_HEIGHT));
 
         TableRow.LayoutParams lp = (TableRow.LayoutParams) iv.getLayoutParams();
-        lp.setMargins(20, 20, 20, 20);
+        lp.setMargins(MARGIN, MARGIN, MARGIN, MARGIN);
 
         // image 기능
         iv.setOnClickListener(new View.OnClickListener() {
