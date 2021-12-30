@@ -34,6 +34,14 @@ public class PhoneFragment extends Fragment {
         this.context = context;
     }
 
+    public static PhoneFragment newInstance(Context context, int index) {
+        PhoneFragment fragment = new PhoneFragment(context);
+        Bundle bundle = new Bundle();
+        bundle.putInt(ARG_SECTION_NUMBER, index);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
