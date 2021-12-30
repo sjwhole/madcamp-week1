@@ -2,18 +2,18 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:padding="20dp">
 
     <TextView
         android:id="@+id/idpn"
-        android:layout_width="match_parent"
+        android:layout_width="71dp"
         android:layout_height="wrap_content"
         android:text="1" />
 
     <TextView
         android:id="@+id/namepn"
-        android:layout_width="match_parent"
+        android:layout_width="107dp"
         android:layout_height="wrap_content"
         android:text="Name"
         android:textStyle="bold" />
