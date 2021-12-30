@@ -1,6 +1,12 @@
 package com.flowcamp.tab.ui.main;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.provider.ContactsContract.CommonDataKinds;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,22 +22,16 @@ import com.flowcamp.tab.databinding.FragmentPhoneBinding;
 
 import java.util.ArrayList;
 
-/**
- * A placeholder fragment containing a simple view.
- */
 public class PhoneFragment extends Fragment {
 
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     private PageViewModel pageViewModel;
     private FragmentPhoneBinding binding;
+    private Context context;
 
-    public static PhoneFragment newInstance(int index) {
-        PhoneFragment fragment = new PhoneFragment();
-        Bundle bundle = new Bundle();
-        bundle.putInt(ARG_SECTION_NUMBER, index);
-        fragment.setArguments(bundle);
-        return fragment;
+    public PhoneFragment(Context context) {
+        this.context = context;
     }
 
     @Override
@@ -53,11 +53,29 @@ public class PhoneFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_phone, container, false);
 
         ArrayList<Phone> phoneArrayList = new ArrayList<>();
-        phoneArrayList.add(new Phone(1, "성준", "01012344312"));
-        phoneArrayList.add(new Phone(2, "고퍼", "01098519417"));
-        phoneArrayList.add(new Phone(3, "듀크", "01019712412"));
-        phoneArrayList.add(new Phone(4, "모비", "01084329742"));
-        phoneArrayList.add(new Phone(5, "뎃", "01012302934"));
+
+        Uri uri = CommonDataKinds.Phone.CONTENT_URI;
+        String[] projection = new String[]{
+                ContactsContract.Contacts._ID,
+                CommonDataKinds.Phone.DISPLAY_NAME,
+                CommonDataKinds.Phone.NUMBER,
+        };
+
+        String sortOrder = CommonDataKinds.Phone.DISPLAY_NAME + " COLLATE LOCALIZED ASC";
+
+        try {
+            @SuppressLint("Recycle") Cursor cursor = context.getContentResolver().query(uri, projection, null, null, sortOrder);
+            if (cursor.moveToFirst()) {
+                do {
+                    Phone phone = new Phone((int) cursor.getLong(0), cursor.getString(1), cursor.getString(2));
+                    phoneArrayList.add(phone);
+
+                } while (cursor.moveToNext());
+            }
+        } catch (SecurityException ignored) {
+            ignored.printStackTrace();
+            phoneArrayList.add(new Phone(1, "연락처 접근 권한을 허용해주세요", ""));
+        }
 
         PhoneListViewAdapter adapter = new PhoneListViewAdapter(phoneArrayList);
 
