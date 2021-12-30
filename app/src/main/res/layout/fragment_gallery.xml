@@ -5,8 +5,14 @@
     android:layout_height="match_parent"
     tools:context=".ui.main.GalleryFragment">
 
-    <TableLayout
-        android:id="@+id/tableLayout"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="match_parent">
+
+        <TableLayout
+            android:id="@+id/tableLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </ScrollView>
+
 </FrameLayout>
