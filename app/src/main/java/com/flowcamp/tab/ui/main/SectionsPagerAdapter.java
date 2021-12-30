@@ -10,29 +10,28 @@ import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.flowcamp.tab.R;
 
-import java.util.ArrayList;
 
 public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @StringRes
     private static final int[] TAB_TITLES = new int[]{R.string.tab_text_1, R.string.tab_text_2, R.string.tab_text_3};
     private final Context mContext;
-    private ArrayList<Fragment>phoneFragmentList = new ArrayList<>();
 
     public SectionsPagerAdapter(Context context, FragmentManager fm) {
         super(fm);
         mContext = context;
-        phoneFragmentList.add(new PhoneFragment());
-        phoneFragmentList.add(new GalleryFragment());
-        phoneFragmentList.add(new PhoneFragment());
     }
 
     @Override
     public Fragment getItem(int position) {
-        // getItem is called to instantiate the fragment for the given page.
-        // Return a PlaceholderFragment (defined as a static inner class below).
-//        return PhoneFragment.newInstance(position + 1);
-        return phoneFragmentList.get(position);
+        position++;
+        if (position == 1) {
+            return PhoneFragment.newInstance(mContext, position);
+        } else if (position == 2) {
+            return GalleryFragment.newInstance(position);
+        } else {
+            return PhoneFragment.newInstance(mContext, position);
+        }
     }
 
     @Nullable
