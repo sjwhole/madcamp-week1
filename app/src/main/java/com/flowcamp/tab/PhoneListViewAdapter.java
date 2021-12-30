@@ -39,7 +39,6 @@ public class PhoneListViewAdapter extends BaseAdapter {
         } else viewPhone = convertView;
 
         Phone phone = (Phone) getItem(position);
-        ((TextView) viewPhone.findViewById(R.id.idpn)).setText(String.format("ID = %d", phone.phoneId));
         ((TextView) viewPhone.findViewById(R.id.namepn)).setText(String.format("%s", phone.name));
         ((TextView) viewPhone.findViewById(R.id.numpn)).setText(String.format("%s", phone.num));
 
