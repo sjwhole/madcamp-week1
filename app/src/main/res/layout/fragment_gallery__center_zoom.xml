@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#80FFFFFF"
+    tools:context=".ui.main.GalleryFragment_CenterZoom">
+
+    <io.alterac.blurkit.BlurLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:blk_blurRadius="10"
+        app:blk_downscaleFactor="0.12"
+        app:blk_fps="0">
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="TextView"
+            android:textSize="60sp" />
+
+        <ImageView
+            android:id="@+id/zoom_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:src="@tools:sample/avatars" />
+    </io.alterac.blurkit.BlurLayout>
+
+</FrameLayout>

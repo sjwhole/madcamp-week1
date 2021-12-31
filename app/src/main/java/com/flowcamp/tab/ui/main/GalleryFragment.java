@@ -8,8 +8,11 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.os.Debug;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,6 +32,12 @@ public class GalleryFragment extends Fragment {
 
     private PageViewModel pageViewModel;
     private FragmentPhoneBinding binding;
+
+    private FragmentManager fragmentManager;
+    private GalleryFragment_CenterZoom centerZoom;
+    private FragmentTransaction transaction;
+
+    private boolean isZooming = false;
 
     public GalleryFragment() {
         // Required empty public constructor
@@ -52,6 +61,13 @@ public class GalleryFragment extends Fragment {
         }
         pageViewModel.setIndex(index);
 
+        fragmentManager = getParentFragmentManager();
+        centerZoom = new GalleryFragment_CenterZoom();
+
+        transaction = fragmentManager.beginTransaction();
+        transaction.replace(R.id.gallery_childFrame, centerZoom).commit();
+        transaction.hide(centerZoom);
+        // hide
     }
 
     @Override
@@ -60,10 +76,20 @@ public class GalleryFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
 
 
+
         // 스크린 사이즈 구하기
         int SCREEN_WIDTH = getContext().getResources().getDisplayMetrics().widthPixels;
 
-        // load all images from gallery
+        ArrayList<String> imageList = loadImages(rootView);
+
+        showImages(rootView, imageList);
+
+
+        return rootView;
+    }
+
+    // load all images from gallery
+    private ArrayList<String> loadImages(View rootView) {
         Uri uri;
         Cursor cursor;
         int column_index_data, column_index_folder_name;
@@ -87,17 +113,18 @@ public class GalleryFragment extends Fragment {
             imageList.add(absolutePathOfImage);
         }
 
+        return imageList;
+    }
 
+    private void showImages(View rootView, ArrayList<String> imageList) {
         TableLayout tableLayout = rootView.findViewById(R.id.tableLayout);
 
         int COLUMN_SIZE = 3;
         int i;
         TableRow row = null;
-//        for (i = 0; i < listOfAllImages.size(); i++) {
-        for (i = 0; i < 20; i++) {
+        for (i = 0; i < imageList.size(); i++) {
             if (i % COLUMN_SIZE == 0) {
                 row = new TableRow(getActivity());
-//                row.setBackgroundColor(Color.parseColor("#ffff0000")); // for test
             }
 
             ImageView iv = makeImageView(imageList.get(i), COLUMN_SIZE);
@@ -107,36 +134,20 @@ public class GalleryFragment extends Fragment {
                 tableLayout.addView(row);
             }
         }
-
-//        if (i % COLUMN_SIZE != 3) {
-//            tableLayout.addView(row);
-//        }
-
-        return rootView;
     }
 
     private ImageView makeImageView(String imagePath, int columnSize) {
         int SCREEN_WIDTH = getContext().getResources().getDisplayMetrics().widthPixels;
         int MARGIN = SCREEN_WIDTH / 100;
-        int IMAGE_WIDTH = (SCREEN_WIDTH - 6*MARGIN) / columnSize;
+        int IMAGE_WIDTH = (SCREEN_WIDTH - 2*columnSize*MARGIN) / columnSize;
         int IMAGE_HEIGHT = IMAGE_WIDTH;
 
         ImageView iv = new ImageView(getActivity());
         iv.setScaleType(ImageView.ScaleType.CENTER_CROP); // 크기에 맞게 자르는 type
 
-
         Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
-        Log.i(null, bitmap.getWidth() + " " + bitmap.getHeight());
+
         // bitmap resize
-        // TODO: Maintain picture's ratio
-        // ERROR: if IMAGE_WIDTH > bitmap.getWidth() -> ERROR!!!
-        /*if (IMAGE_WIDTH > bitmap.getWidth()) {
-            Log.i(null, "width!");
-        }
-        else if (IMAGE_HEIGHT > bitmap.getHeight()) {
-            Log.i(null, "height!");
-        }
-        else*/
         int resizeWidth, resizeHeight;
         if (bitmap.getWidth() >= bitmap.getHeight()) {
             resizeWidth = (int)(bitmap.getWidth() * ((double)IMAGE_HEIGHT/(double)bitmap.getHeight()));
@@ -152,7 +163,6 @@ public class GalleryFragment extends Fragment {
         iv.setImageBitmap(bitmap);
 
         // image 디자인
-//        iv.setBackgroundColor(Color.parseColor("#ff00B700")); // for test
         iv.setLayoutParams(new TableRow.LayoutParams(IMAGE_WIDTH, IMAGE_HEIGHT));
 
         TableRow.LayoutParams lp = (TableRow.LayoutParams) iv.getLayoutParams();
@@ -162,10 +172,29 @@ public class GalleryFragment extends Fragment {
         iv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Toast.makeText(MainActivity.this, "clicked", Toast.LENGTH_SHORT).show();
+                toggleZoom(centerZoom, imagePath);
             }
         });
 
         return iv;
+    }
+
+    private void toggleZoom(Fragment fragment, String imagePath) {
+        FragmentTransaction ft = fragmentManager.beginTransaction();
+        if (isZooming) {
+            // hide
+            ft.hide(fragment);
+            isZooming = false;
+            Log.i(null, "hide");
+        }
+        else {
+            // show up
+            ImageView img = getView().findViewById(R.id.zoom_image);
+            img.setImageBitmap(BitmapFactory.decodeFile(imagePath));
+            ft.show(fragment);
+            isZooming = true;
+            Log.i(null, "show");
+        }
+        ft.commit();
     }
 }

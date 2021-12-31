@@ -5,7 +5,9 @@
       <map>
         <entry key="..\:/Projects/FC-week1/app/src/main/res/layout/activity_gallery.xml" value="0.27395833333333336" />
         <entry key="..\:/Projects/FC-week1/app/src/main/res/layout/fragment_gallery.xml" value="0.23550724637681159" />
+        <entry key="..\:/Projects/FC-week1/app/src/main/res/layout/fragment_gallery__center_zoom.xml" value="0.14166666666666666" />
         <entry key="..\:/Projects/FC-week1/app/src/main/res/layout/fragment_gallery__zoom.xml" value="0.259375" />
+        <entry key="..\:/Projects/FC-week1/app/src/main/res/layout/fragment_gallery_child.xml" value="0.14166666666666666" />
         <entry key="..\:/Projects/FC-week1/app/src/main/res/layout/fragment_phone.xml" value="0.27395833333333336" />
         <entry key="..\:/Projects/FC-week1/app/src/main/res/layout/gallery_slide.xml" value="0.2" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.33" />
