@@ -10,16 +10,9 @@
     <io.alterac.blurkit.BlurLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:blk_blurRadius="12"
+        app:blk_blurRadius="14"
         app:blk_downscaleFactor="0.12"
         app:blk_fps="0">
-
-        <TextView
-            android:id="@+id/textView3"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="TextView"
-            android:textSize="60sp" />
 
         <ImageView
             android:id="@+id/zoom_image"
