@@ -30,7 +30,7 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         } else if (position == 2) {
             return GalleryFragment.newInstance(position);
         } else {
-            return PhoneFragment.newInstance(mContext, position);
+            return TicTacToeFragment.newInstance(position);
         }
     }
 
