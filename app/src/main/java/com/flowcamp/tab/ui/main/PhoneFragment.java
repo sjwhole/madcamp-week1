@@ -85,7 +85,7 @@ public class PhoneFragment extends Fragment {
             phoneArrayList.add(new Phone(1, "연락처 접근 권한을 허용해주세요", ""));
         }
 
-        PhoneListViewAdapter adapter = new PhoneListViewAdapter(phoneArrayList);
+        PhoneListViewAdapter adapter = new PhoneListViewAdapter(context, phoneArrayList);
 
 
         ListView listView = (ListView) rootView.findViewById(R.id.list);
