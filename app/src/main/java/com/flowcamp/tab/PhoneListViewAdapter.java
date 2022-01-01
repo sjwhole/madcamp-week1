@@ -1,8 +1,12 @@
 package com.flowcamp.tab;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -10,8 +14,10 @@ import java.util.ArrayList;
 public class PhoneListViewAdapter extends BaseAdapter {
 
     final ArrayList<Phone> listPhone;
+    private Context context;
 
-    public PhoneListViewAdapter(ArrayList<Phone> listPhone) {
+    public PhoneListViewAdapter(Context context, ArrayList<Phone> listPhone) {
+        this.context = context;
         this.listPhone = listPhone;
     }
 
@@ -41,6 +47,11 @@ public class PhoneListViewAdapter extends BaseAdapter {
         Phone phone = (Phone) getItem(position);
         ((TextView) viewPhone.findViewById(R.id.namepn)).setText(String.format("%s", phone.name));
         ((TextView) viewPhone.findViewById(R.id.numpn)).setText(String.format("%s", phone.num));
+        ((ImageButton) viewPhone.findViewById(R.id.call)).setOnClickListener(view -> {
+            Intent callIntent = new Intent(Intent.ACTION_CALL);
+            callIntent.setData(Uri.parse("tel:" + phone.getNum()));
+            context.startActivity(callIntent);
+        });
 
         return viewPhone;
     }
