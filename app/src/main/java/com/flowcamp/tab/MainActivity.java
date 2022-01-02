@@ -45,7 +45,12 @@ public class MainActivity extends AppCompatActivity {
         SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
         ViewPager viewPager = binding.viewPager;
         viewPager.setAdapter(sectionsPagerAdapter);
+
         TabLayout tabs = binding.tabs;
         tabs.setupWithViewPager(viewPager);
+
+        tabs.getTabAt(0).setIcon( R.drawable.ic_baseline_account_circle_24);
+        tabs.getTabAt(1).setIcon( R.drawable.ic_baseline_image_24);
+        tabs.getTabAt(2).setIcon( R.drawable.ic_baseline_videogame_asset_24);
     }
 }
