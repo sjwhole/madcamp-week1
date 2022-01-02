@@ -120,7 +120,6 @@ public class GalleryFragment extends Fragment {
         LinearLayout galleryFrame = rootView.findViewById(R.id.gallery_frame);
         LinearLayout row = makeRow(getActivity());
 
-
         while (imageList.size() > 0) {
 //            Log.i(null, "" + imageList.size());
             String currentPath = imageList.poll();
