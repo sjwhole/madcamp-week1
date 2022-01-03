@@ -4,7 +4,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -19,10 +22,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 
 import com.flowcamp.tab.R;
 import com.flowcamp.tab.databinding.FragmentPhoneBinding;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -74,134 +79,146 @@ public class GalleryFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
 
-        Queue<String> imageList = loadImages(rootView);
-        showImages(rootView, imageList);
+//        Queue<String> imageList = loadImages(rootView);
+//        showImages(rootView, imageList);
+
+        SetImageTask task = new SetImageTask(rootView);
+        task.execute();
 
         return rootView;
     }
 
-    // load all images from gallery
-    private Queue<String> loadImages(View rootView) {
-        Uri uri;
-        Cursor cursor;
-        int column_index_data, column_index_folder_name;
-        Queue<String> imageList = new LinkedList<>();
-        String absolutePathOfImage = null;
-        uri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+    private class SetImageTask extends AsyncTask<Object, Void, Boolean> {
+        private View mRootView;
+        private Queue<String> imagePaths;
+        private LinearLayout galleryFrame;
 
-        String[] projection = { MediaStore.MediaColumns.DATA,
-                MediaStore.Images.Media.BUCKET_DISPLAY_NAME };
-
-        String sortOrder = MediaStore.Images.Media.DATE_TAKEN + " DESC";
-        cursor = rootView.getContext().getContentResolver().query(uri, projection, null,
-                null, sortOrder);
-
-        column_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-        column_index_folder_name = cursor
-                .getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
-        while (cursor.moveToNext() && imageList.size() < 20) {
-            absolutePathOfImage = cursor.getString(column_index_data);
-
-            imageList.add(absolutePathOfImage);
+        public SetImageTask(View rootView) {
+            mRootView = rootView;
+            imagePaths = loadImages(mRootView);
         }
 
-        return imageList;
-    }
+        @Override
+        protected Boolean doInBackground(Object... params) {
+            galleryFrame = new LinearLayout(mRootView.getContext());
+            galleryFrame.setOrientation(LinearLayout.VERTICAL);
+            LinearLayout.LayoutParams llParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
 
-    private void showImages(View rootView, Queue<String> imageList) {
-        if (imageList.size() == 0) {
-            return;
+            setImages(mRootView, imagePaths);
+            return true;
         }
 
-        int SCREEN_WIDTH = getContext().getResources().getDisplayMetrics().widthPixels;
-        int MARGIN = SCREEN_WIDTH / 50;
-        int MAX_WIDTH = SCREEN_WIDTH - 2*MARGIN;
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+//        Log.i(null, "Image async task done.");
+            ScrollView frame = mRootView.findViewById(R.id.gallery_frame);
+            frame.addView(galleryFrame);
+        }
 
-        LinearLayout galleryFrame = rootView.findViewById(R.id.gallery_frame);
-        LinearLayout row = makeRow(getActivity());
+        // load all images from gallery
+        private Queue<String> loadImages(View rootView) {
+            Uri uri;
+            Cursor cursor;
+            int column_index_data, column_index_folder_name;
+            Queue<String> imageList = new LinkedList<>();
+            String absolutePathOfImage = null;
+            uri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
-        while (imageList.size() > 0) {
+            String[] projection = { MediaStore.MediaColumns.DATA,
+                    MediaStore.Images.Media.BUCKET_DISPLAY_NAME };
+
+            String sortOrder = MediaStore.Images.Media.DATE_TAKEN + " DESC";
+            cursor = rootView.getContext().getContentResolver().query(uri, projection, null,
+                    null, sortOrder);
+
+            column_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+            column_index_folder_name = cursor
+                    .getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
+            while (cursor.moveToNext()) { // && imageList.size() < 20) {
+                absolutePathOfImage = cursor.getString(column_index_data);
+
+                imageList.add(absolutePathOfImage);
+            }
+
+            cursor.close();
+            return imageList;
+        }
+
+        private void setImages(View rootView, Queue<String> imageList) {
+            if (imageList.size() == 0) {
+                return;
+            }
+
+            int SCREEN_WIDTH = getContext().getResources().getDisplayMetrics().widthPixels;
+            int MARGIN = SCREEN_WIDTH / 50;
+            int MAX_WIDTH = SCREEN_WIDTH - 2*MARGIN;
+
+//            LinearLayout galleryFrame = rootView.findViewById(R.id.gallery_frame);
+            LinearLayout row = makeRow(getActivity());
+
+            while (imageList.size() > 0) {
 //            Log.i(null, "" + imageList.size());
-            String currentPath = imageList.poll();
-            Bitmap current = BitmapFactory.decodeFile(currentPath);
-            double currentRatio = (double) current.getWidth() / current.getHeight();
+                String currentPath = imageList.poll();
 
-            if (currentRatio > 2) {
-                ResizeAndAddBitmap(current,
-                        MAX_WIDTH,
-                        (int) (current.getHeight() * ((double) MAX_WIDTH/current.getWidth())),
-                        row, MARGIN, MARGIN,
-                        currentPath);
-                galleryFrame.addView(row);
-                row = makeRow(getActivity());
-                continue;
-            }
+                Bitmap current = loadImageFromPath(currentPath);
+                double currentRatio = (double) current.getWidth() / current.getHeight();
 
-            String nextPath = imageList.poll();
-            Bitmap next = BitmapFactory.decodeFile(nextPath);
-            if (next == null) {
-                // end
-                ResizeAndAddBitmap(current,
-                        MAX_WIDTH,
-                        (int) (current.getHeight() * ((double) MAX_WIDTH/current.getWidth())),
-                        row, MARGIN, MARGIN,
-                        currentPath);
-                galleryFrame.addView(row);
-                break;
-            }
-            double nextRatio = (double)next.getWidth() / next.getHeight();
+                if (currentRatio > 2) {
+                    ResizeAndAddBitmap(current,
+                            MAX_WIDTH,
+                            (int) (current.getHeight() * ((double) MAX_WIDTH/current.getWidth())),
+                            row, MARGIN, MARGIN,
+                            currentPath);
+                    galleryFrame.addView(row);
+                    row = makeRow(getActivity());
+                    continue;
+                }
 
-            if (nextRatio >= (double) 16/9) {
-                // end, end
-                ResizeAndAddBitmap(current,
-                        MAX_WIDTH,
-                        (int) (current.getHeight() * ((double) MAX_WIDTH/current.getWidth())),
-                        row, MARGIN, MARGIN,
-                        currentPath);
-                galleryFrame.addView(row);
-
-                row = makeRow(getActivity());
-                ResizeAndAddBitmap(next,
-                        MAX_WIDTH,
-                        (int) (next.getHeight() * ((double) MAX_WIDTH/next.getWidth())),
-                        row, MARGIN, MARGIN,
-                        nextPath);
-                galleryFrame.addView(row);
-
-                row = makeRow(getActivity());
-            }
-            else if (currentRatio + nextRatio >= 2) {
-                // add, end
-
-                // W1 + W2 = Wm
-                // H1 = H2
-                // => H = Wm / (R1 + R2)
-                // => W1 = H * R1
-                double height = (MAX_WIDTH-MARGIN) / (currentRatio + nextRatio);
-
-                // TODO: 가로, 세로 비율이 반전된다...
-                ResizeAndAddBitmap(current,
-                        (int)(height * currentRatio),
-                        (int)height,
-                        row, MARGIN, MARGIN,
-                        currentPath);
-
-                ResizeAndAddBitmap(next,
-                        (int)(height * nextRatio),
-                        (int)height,
-                        row, 0, MARGIN,
-                        nextPath);
-
-                galleryFrame.addView(row);
-                row = makeRow(getActivity());
-            }
-            // currentRatio + nextRatio <= 2
-            else {
-                // add, continue
-                if (imageList.peek() == null) {
+                String nextPath = imageList.poll();
+                if (nextPath == null) {
                     // end
-                    double height = (MAX_WIDTH-MARGIN)/ (currentRatio + nextRatio);
+                    ResizeAndAddBitmap(current,
+                            MAX_WIDTH,
+                            (int) (current.getHeight() * ((double) MAX_WIDTH/current.getWidth())),
+                            row, MARGIN, MARGIN,
+                            currentPath);
+                    galleryFrame.addView(row);
+                    continue;
+                }
+                Bitmap next = loadImageFromPath(nextPath);
+                double nextRatio = (double)next.getWidth() / next.getHeight();
 
+                if (nextRatio >= (double) 16/9) {
+                    // end, end
+                    ResizeAndAddBitmap(current,
+                            MAX_WIDTH,
+                            (int) (current.getHeight() * ((double) MAX_WIDTH/current.getWidth())),
+                            row, MARGIN, MARGIN,
+                            currentPath);
+                    galleryFrame.addView(row);
+
+                    row = makeRow(getActivity());
+                    ResizeAndAddBitmap(next,
+                            MAX_WIDTH,
+                            (int) (next.getHeight() * ((double) MAX_WIDTH/next.getWidth())),
+                            row, MARGIN, MARGIN,
+                            nextPath);
+                    galleryFrame.addView(row);
+
+                    row = makeRow(getActivity());
+                }
+                else if (currentRatio + nextRatio >= 2) {
+                    // add, end
+
+                    // W1 + W2 = Wm
+                    // H1 = H2
+                    // => H = Wm / (R1 + R2)
+                    // => W1 = H * R1
+                    double height = (MAX_WIDTH-MARGIN) / (currentRatio + nextRatio);
+
+                    // TODO: 가로, 세로 비율이 반전된다...
                     ResizeAndAddBitmap(current,
                             (int)(height * currentRatio),
                             (int)height,
@@ -215,53 +232,130 @@ public class GalleryFragment extends Fragment {
                             nextPath);
 
                     galleryFrame.addView(row);
-                }
-
-                String next2Path = imageList.poll();
-                Bitmap next2 = BitmapFactory.decodeFile(next2Path);
-                double next2Ratio = (double) next2.getWidth() / next2.getHeight();
-
-                // next2가  너무 길면 뒤로 빼기
-                if (next2Ratio > 2) {
-                    // TODO: current, next 어디감?
-
-                    ResizeAndAddBitmap(next2,
-                            MAX_WIDTH,
-                            (int) (next2.getHeight() * ((double) MAX_WIDTH/next2.getWidth())),
-                            row, MARGIN, MARGIN,
-                            next2Path);
-
-                    galleryFrame.addView(row);
                     row = makeRow(getActivity());
                 }
+                // currentRatio + nextRatio <= 2
                 else {
-                    // add, end
-                    double height = (MAX_WIDTH - 2*MARGIN) /
-                            (currentRatio*next2Ratio + nextRatio*next2Ratio + currentRatio*nextRatio);
+                    // add, continue
+                    if (imageList.peek() == null) {
+                        // end
+                        double height = (MAX_WIDTH-MARGIN)/ (currentRatio + nextRatio);
 
-                    ResizeAndAddBitmap(current,
-                            (int)(height * currentRatio),
-                            (int)height,
-                            row, MARGIN, MARGIN,
-                            currentPath);
+                        ResizeAndAddBitmap(current,
+                                (int)(height * currentRatio),
+                                (int)height,
+                                row, MARGIN, MARGIN,
+                                currentPath);
 
-                    ResizeAndAddBitmap(next,
-                            (int)(height * nextRatio),
-                            (int)height,
-                            row, 0, 0,
-                            nextPath);
+                        ResizeAndAddBitmap(next,
+                                (int)(height * nextRatio),
+                                (int)height,
+                                row, 0, MARGIN,
+                                nextPath);
 
-                    ResizeAndAddBitmap(next2,
-                            (int)(height * next2Ratio),
-                            (int)height,
-                            row, MARGIN, MARGIN,
-                            next2Path);
+                        galleryFrame.addView(row);
 
-                    galleryFrame.addView(row);
-                    row = makeRow(getActivity());
+                        continue;
+                    }
+
+                    String next2Path = imageList.poll();
+                    Bitmap next2 = loadImageFromPath(next2Path);
+                    double next2Ratio = (double) next2.getWidth() / next2.getHeight();
+
+                    // next2가  너무 길면 뒤로 빼기
+                    if (next2Ratio > 2) {
+                        // TODO: current, next 어디감?
+
+                        ResizeAndAddBitmap(next2,
+                                MAX_WIDTH,
+                                (int) (next2.getHeight() * ((double) MAX_WIDTH/next2.getWidth())),
+                                row, MARGIN, MARGIN,
+                                next2Path);
+
+                        galleryFrame.addView(row);
+                        row = makeRow(getActivity());
+                    }
+                    else {
+                        // add, end
+                        double height = (MAX_WIDTH - 2*MARGIN) /
+                                (currentRatio + nextRatio + next2Ratio);
+
+                        ResizeAndAddBitmap(current,
+                                (int)(height * currentRatio),
+                                (int)height,
+                                row, MARGIN, MARGIN,
+                                currentPath);
+
+                        ResizeAndAddBitmap(next,
+                                (int)(height * nextRatio),
+                                (int)height,
+                                row, 0, 0,
+                                nextPath);
+
+                        ResizeAndAddBitmap(next2,
+                                (int)(height * next2Ratio),
+                                (int)height,
+                                row, MARGIN, MARGIN,
+                                next2Path);
+
+                        galleryFrame.addView(row);
+                        row = makeRow(getActivity());
+                    }
                 }
             }
         }
+    }
+
+    private Bitmap loadImageFromPath(String path) {
+        Bitmap bitmap = BitmapFactory.decodeFile(path);
+
+        ExifInterface exif = null;
+        try {
+            exif = new ExifInterface(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int exifOrientation = exif.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        int exifDegree = exifOrientationToDegrees(exifOrientation);
+        bitmap = rotate(bitmap, exifDegree);
+
+        return bitmap;
+    }
+
+    public int exifOrientationToDegrees(int exifOrientation){
+        if(exifOrientation == ExifInterface.ORIENTATION_ROTATE_90) {
+            return 90;
+        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_180) {
+            return 180;
+        }else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_270) {
+            return 270;
+        }
+        return 0;
+    }
+
+    public Bitmap rotate(Bitmap bitmap, int degrees)
+    {
+        if(degrees != 0 && bitmap != null)
+        {
+            Matrix m = new Matrix();
+            m.setRotate(degrees, (float) bitmap.getWidth() / 2,
+                    (float) bitmap.getHeight() / 2);
+            try
+            {
+                Bitmap converted = Bitmap.createBitmap(bitmap, 0, 0,
+                        bitmap.getWidth(), bitmap.getHeight(), m, true);
+                if(bitmap != converted)
+                {
+                    bitmap.recycle();
+                    bitmap = converted;
+                }
+            }
+            catch(OutOfMemoryError ex)
+            {
+            }
+        }
+        return bitmap;
     }
 
     private LinearLayout makeRow(Context context) {
@@ -312,7 +406,7 @@ public class GalleryFragment extends Fragment {
         else {
             // show up
             ImageView img = getView().findViewById(R.id.zoom_image);
-            img.setImageBitmap(BitmapFactory.decodeFile(imagePath));
+            img.setImageBitmap(loadImageFromPath(imagePath));
             ft.show(fragment);
             isZooming = true;
             Log.i(null, "show");
