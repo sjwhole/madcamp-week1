@@ -4,7 +4,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -23,6 +26,8 @@ import android.widget.LinearLayout;
 import com.flowcamp.tab.R;
 import com.flowcamp.tab.databinding.FragmentPhoneBinding;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -77,8 +82,27 @@ public class GalleryFragment extends Fragment {
         Queue<String> imageList = loadImages(rootView);
         showImages(rootView, imageList);
 
+//        SetImageTask task = new SetImageTask(rootView);
+//        task.execute();
+
         return rootView;
     }
+
+    /*private class SetImageTask extends AsyncTask<Object, Void, Boolean> {
+        private View mRootView;
+        private Queue<String> imagePaths;
+
+        public SetImageTask(View rootView) {
+            mRootView = rootView;
+            imagePaths = loadImages(mRootView);
+        }
+
+        @Override
+        protected Boolean doInBackground(Object... params) {
+            showImages(mRootView, imagePaths);
+            return true;
+        }
+    }*/
 
     // load all images from gallery
     private Queue<String> loadImages(View rootView) {
@@ -105,6 +129,7 @@ public class GalleryFragment extends Fragment {
             imageList.add(absolutePathOfImage);
         }
 
+        cursor.close();
         return imageList;
     }
 
@@ -123,7 +148,8 @@ public class GalleryFragment extends Fragment {
         while (imageList.size() > 0) {
 //            Log.i(null, "" + imageList.size());
             String currentPath = imageList.poll();
-            Bitmap current = BitmapFactory.decodeFile(currentPath);
+
+            Bitmap current = loadImageFromPath(currentPath);
             double currentRatio = (double) current.getWidth() / current.getHeight();
 
             if (currentRatio > 2) {
@@ -138,8 +164,7 @@ public class GalleryFragment extends Fragment {
             }
 
             String nextPath = imageList.poll();
-            Bitmap next = BitmapFactory.decodeFile(nextPath);
-            if (next == null) {
+            if (nextPath == null) {
                 // end
                 ResizeAndAddBitmap(current,
                         MAX_WIDTH,
@@ -147,8 +172,9 @@ public class GalleryFragment extends Fragment {
                         row, MARGIN, MARGIN,
                         currentPath);
                 galleryFrame.addView(row);
-                break;
+                continue;
             }
+            Bitmap next = loadImageFromPath(nextPath);
             double nextRatio = (double)next.getWidth() / next.getHeight();
 
             if (nextRatio >= (double) 16/9) {
@@ -215,10 +241,12 @@ public class GalleryFragment extends Fragment {
                             nextPath);
 
                     galleryFrame.addView(row);
+
+                    continue;
                 }
 
                 String next2Path = imageList.poll();
-                Bitmap next2 = BitmapFactory.decodeFile(next2Path);
+                Bitmap next2 = loadImageFromPath(next2Path);
                 double next2Ratio = (double) next2.getWidth() / next2.getHeight();
 
                 // next2가  너무 길면 뒤로 빼기
@@ -237,7 +265,7 @@ public class GalleryFragment extends Fragment {
                 else {
                     // add, end
                     double height = (MAX_WIDTH - 2*MARGIN) /
-                            (currentRatio*next2Ratio + nextRatio*next2Ratio + currentRatio*nextRatio);
+                            (currentRatio + nextRatio + next2Ratio);
 
                     ResizeAndAddBitmap(current,
                             (int)(height * currentRatio),
@@ -262,6 +290,58 @@ public class GalleryFragment extends Fragment {
                 }
             }
         }
+    }
+
+    private Bitmap loadImageFromPath(String path) {
+        Bitmap bitmap = BitmapFactory.decodeFile(path);
+
+        ExifInterface exif = null;
+        try {
+            exif = new ExifInterface(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int exifOrientation = exif.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        int exifDegree = exifOrientationToDegrees(exifOrientation);
+        bitmap = rotate(bitmap, exifDegree);
+
+        return bitmap;
+    }
+
+    public int exifOrientationToDegrees(int exifOrientation){
+        if(exifOrientation == ExifInterface.ORIENTATION_ROTATE_90) {
+            return 90;
+        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_180) {
+            return 180;
+        }else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_270) {
+            return 270;
+        }
+        return 0;
+    }
+
+    public Bitmap rotate(Bitmap bitmap, int degrees)
+    {
+        if(degrees != 0 && bitmap != null)
+        {
+            Matrix m = new Matrix();
+            m.setRotate(degrees, (float) bitmap.getWidth() / 2,
+                    (float) bitmap.getHeight() / 2);
+            try
+            {
+                Bitmap converted = Bitmap.createBitmap(bitmap, 0, 0,
+                        bitmap.getWidth(), bitmap.getHeight(), m, true);
+                if(bitmap != converted)
+                {
+                    bitmap.recycle();
+                    bitmap = converted;
+                }
+            }
+            catch(OutOfMemoryError ex)
+            {
+            }
+        }
+        return bitmap;
     }
 
     private LinearLayout makeRow(Context context) {
@@ -312,7 +392,7 @@ public class GalleryFragment extends Fragment {
         else {
             // show up
             ImageView img = getView().findViewById(R.id.zoom_image);
-            img.setImageBitmap(BitmapFactory.decodeFile(imagePath));
+            img.setImageBitmap(loadImageFromPath(imagePath));
             ft.show(fragment);
             isZooming = true;
             Log.i(null, "show");
