@@ -1,7 +1,9 @@
 package com.flowcamp.tab.ui.main;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,6 +12,8 @@ import android.provider.ContactsContract.CommonDataKinds;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import androidx.fragment.app.Fragment;
@@ -91,7 +95,42 @@ public class PhoneFragment extends Fragment {
         ListView listView = (ListView) rootView.findViewById(R.id.list);
         listView.setAdapter(adapter);
 
+        rootView.findViewById(R.id.add_contact).setOnClickListener(
+                view -> {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle("전화번호 추가하기");
+                    LinearLayout layout = new LinearLayout(context);
+                    layout.setOrientation(LinearLayout.VERTICAL);
+
+                    final EditText nameBox = new EditText(context);
+                    nameBox.setHint("이름");
+                    layout.addView(nameBox);
+
+                    final EditText numberBox = new EditText(context);
+                    numberBox.setHint("전화번호");
+                    layout.addView(numberBox);
+
+                    builder.setView(layout);
+
+                    builder.setPositiveButton("추가", (dialog, which) -> addContact(nameBox.getText().toString(), numberBox.getText().toString()));
+                    builder.setNegativeButton("취소", (dialog, which) -> dialog.cancel());
+
+                    builder.show();
+
+                }
+        );
+
         return rootView;
+    }
+
+    public void addContact(String name, String number) {
+        Intent intent = new Intent(
+                ContactsContract.Intents.SHOW_OR_CREATE_CONTACT,
+                ContactsContract.Contacts.CONTENT_URI);
+        intent.setData(Uri.parse("tel:" + number));//specify your number here
+        intent.putExtra(ContactsContract.Intents.Insert.NAME, name);
+        startActivity(intent);
+
     }
 
     @Override
