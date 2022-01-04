@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.flowcamp.tab.R;
 import com.flowcamp.tab.model.Board;
+import com.flowcamp.tab.model.Choice;
 import com.flowcamp.tab.model.Player;
 
 public class TicTacToeFragment extends Fragment implements View.OnClickListener {
@@ -24,6 +25,7 @@ public class TicTacToeFragment extends Fragment implements View.OnClickListener 
     private View winnerPlayerViewGroup;
     private TextView winnerPlayerLabel;
     private Button btnReset;
+    private Button[][] buttons;
 
 
     public TicTacToeFragment() {
@@ -63,11 +65,22 @@ public class TicTacToeFragment extends Fragment implements View.OnClickListener 
         });
         board = new Board();
 
+        int x, y;
+        x = (int) (Math.random() * 3);
+        y = (int) (Math.random() * 3);
+        board.mark(x, y, Player.X);
+
+        buttons = new Button[3][3];
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                Button button = new Button(getActivity());
+                buttons[i][j] = new Button(getActivity());
+                Button button = buttons[i][j];
                 button.setLayoutParams(new LinearLayout.LayoutParams(300, 300));
                 button.setTextSize(50);
+
+                if (i == x && j == y) {
+                    button.setText(Player.X.toString());
+                }
 
                 button.setTag(Integer.toString(i) + j);
                 button.setOnClickListener(new View.OnClickListener() {
@@ -91,7 +104,7 @@ public class TicTacToeFragment extends Fragment implements View.OnClickListener 
         int row = Integer.parseInt(tag.substring(0, 1));
         int col = Integer.parseInt(tag.substring(1, 2));
 
-        Player playerThatMoved = board.mark(row, col);
+        Player playerThatMoved = board.mark(row, col, Player.O);
 
         if (playerThatMoved != null) {
             button.setText(playerThatMoved.toString());
@@ -99,6 +112,14 @@ public class TicTacToeFragment extends Fragment implements View.OnClickListener 
             if (board.getWinner() != null) {
                 winnerPlayerLabel.setText(playerThatMoved.toString());
                 winnerPlayerViewGroup.setVisibility(View.VISIBLE);
+            } else {
+                Choice choice = board.com_choice();
+                board.mark(choice.getRow(), choice.getColumn(), Player.X);
+                buttons[choice.getRow()][choice.getColumn()].setText(Player.X.toString());
+                if (board.getWinner() != null) {
+                    winnerPlayerLabel.setText(Player.X.toString());
+                    winnerPlayerViewGroup.setVisibility(View.VISIBLE);
+                }
             }
         }
     }
@@ -111,5 +132,9 @@ public class TicTacToeFragment extends Fragment implements View.OnClickListener 
         for (int i = 0; i < buttonGrid.getChildCount(); i++) {
             ((Button) buttonGrid.getChildAt(i)).setText("");
         }
+        int x = (int) (Math.random() * 3);
+        int y = (int) (Math.random() * 3);
+        board.mark(x, y, Player.X);
+        buttons[x][y].setText(Player.X.toString());
     }
 }

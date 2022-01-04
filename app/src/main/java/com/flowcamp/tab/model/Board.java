@@ -1,6 +1,8 @@
 package com.flowcamp.tab.model;
 
 
+import android.util.Log;
+
 public class Board {
 
     private Cell[][] cells = new Cell[3][3];
@@ -30,23 +32,24 @@ public class Board {
         }
     }
 
-    public Player mark(int row, int col) {
+    public Player mark(int row, int col, Player player) {
 
         Player playerThatMoved = null;      // 움직인 선수 초기화
 
         if (isValid(row, col)) {     // 해당 셀을 선택할 수 있으면
 
-            cells[row][col].setValue(currentTurn);  // 해당 셀에 현재 차례의 선수 삽입
-            playerThatMoved = currentTurn;      // 현재 차례 선수를 움직인 선수에 삽입
+            cells[row][col].setValue(player);  // 해당 셀에 현재 차례의 선수 삽입
+            playerThatMoved = player;      // 현재 차례 선수를 움직인 선수에 삽입
 
-            if (isWinningMoveByPlayer(currentTurn, row, col)) {      // 승부가 났는지 확인
+            if (isWinningMoveByPlayer(player, row, col)) {      // 승부가 났는지 확인
                 state = GameState.FINISHED;
-                winner = currentTurn;
+                winner = player;
 
-            } else {
-                // flip the current turn and continue
-                flipCurrentTurn();      // 현재 차례 선수 바꿈.
             }
+//            else {
+//                // flip the current turn and continue
+//                flipCurrentTurn();      // 현재 차례 선수 바꿈.
+//            }
         }
 
         return playerThatMoved;
@@ -94,8 +97,98 @@ public class Board {
                 && cells[2][0].getValue() == player);
     }
 
+    private boolean isPlayerWinner(Player player) {
+        return (cells[0][0].getValue() == player         // 3-in-the-row
+                && cells[0][1].getValue() == player
+                && cells[0][2].getValue() == player)
+                || (cells[1][0].getValue() == player      // 3-in-the-column
+                && cells[1][1].getValue() == player
+                && cells[1][2].getValue() == player)
+                || (cells[2][0].getValue() == player
+                && cells[2][1].getValue() == player
+                && cells[2][2].getValue() == player)
+                || (cells[0][0].getValue() == player
+                && cells[1][0].getValue() == player
+                && cells[2][0].getValue() == player)
+                || (cells[0][1].getValue() == player
+                && cells[1][1].getValue() == player
+                && cells[2][1].getValue() == player)
+                || (cells[0][2].getValue() == player
+                && cells[1][2].getValue() == player
+                && cells[2][2].getValue() == player)
+                || (cells[0][0].getValue() == player
+                && cells[1][1].getValue() == player
+                && cells[2][2].getValue() == player)
+                || (cells[0][2].getValue() == player
+                && cells[1][1].getValue() == player
+                && cells[2][0].getValue() == player);
+    }
+
+    private boolean isGameOver() {
+        return isPlayerWinner(Player.X) || isPlayerWinner(Player.O);
+    }
+
+
     private void flipCurrentTurn() {
         currentTurn = currentTurn == Player.X ? Player.O : Player.X;
     }
 
+
+    private int evaluate() {
+        if (isPlayerWinner(Player.X)) {
+            return 1;
+        } else if (isPlayerWinner(Player.O)) {
+            return -1;
+        }
+        return 0;
+    }
+
+    private Choice minimax(Cell[][] state, int depth, Player player) {
+        Choice choice, cur;
+        if (player == Player.X) {
+            choice = new Choice(-1, -1, -1000000);
+        } else {
+            choice = new Choice(-1, -1, 1000000);
+        }
+        if (depth == 0 || isGameOver()) {
+            return new Choice(-1, -1, evaluate());
+        }
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (isCellValueAlreadySet(i, j)) continue;
+                state[i][j].setValue(player);
+                cur = minimax(state, depth - 1, player == Player.X ? Player.O : Player.X);
+                Log.i("i", Integer.toString(i) + j);
+                state[i][j].setValue(null);
+                cur.setRow(i);
+                cur.setColumn(j);
+
+                if (player == Player.X) {
+                    if (cur.getScore() > choice.getScore()) {
+                        choice = cur;
+                    }
+                } else {
+                    if (cur.getScore() < choice.getScore()) {
+                        choice = cur;
+                    }
+                }
+            }
+        }
+        return choice;
+    }
+
+    public Choice com_choice() {
+        int depth = 0;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (cells[i][j].getValue() == null) {
+                    depth++;
+                }
+            }
+        }
+        if (depth == 0 || isGameOver()) return null;
+        return minimax(cells, depth, Player.X);
+//        cells[choice.getRow()][choice.getColumn()].setValue(Player.X);
+    }
 }
+

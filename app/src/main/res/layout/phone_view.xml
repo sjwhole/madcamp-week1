@@ -14,7 +14,7 @@
         android:layout_alignParentLeft="true"
         android:layout_centerInParent="true"
         android:layout_marginLeft="10dp"
-        android:src="@drawable/ic_baseline_account_circle_24"
+        android:src="@drawable/agumon"
         app:shapeAppearanceOverlay="@style/roundedImageViewRounded"
         app:strokeColor="@color/white"
         app:strokeWidth="1dp" />
@@ -42,6 +42,7 @@
         android:layout_toRightOf="@+id/pn_textAnchor"
         android:layout_below="@+id/namepn"
         android:fontFamily="@font/notosans_thin"
+        android:gravity="top"
         android:text="01012341234"
         android:textSize="15dp" />
 
