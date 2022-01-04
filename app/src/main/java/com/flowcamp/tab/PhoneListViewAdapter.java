@@ -2,12 +2,15 @@ package com.flowcamp.tab;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
+import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.ArrayList;
 
@@ -45,6 +48,12 @@ public class PhoneListViewAdapter extends BaseAdapter {
         } else viewPhone = convertView;
 
         Phone phone = (Phone) getItem(position);
+        ShapeableImageView siv = (ShapeableImageView) viewPhone.findViewById(R.id.pn_profile);
+        if (phone.profile != null) {
+            siv.setImageBitmap(phone.profile);
+        } else {
+            siv.setImageResource(R.drawable.ic_baseline_account_circle_24);
+        }
         ((TextView) viewPhone.findViewById(R.id.namepn)).setText(String.format("%s", phone.name));
         ((TextView) viewPhone.findViewById(R.id.numpn)).setText(String.format("%s", phone.num));
         ((ImageButton) viewPhone.findViewById(R.id.call)).setOnClickListener(view -> {
