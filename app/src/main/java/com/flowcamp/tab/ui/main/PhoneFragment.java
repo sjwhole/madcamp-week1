@@ -2,13 +2,18 @@ package com.flowcamp.tab.ui.main;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +29,8 @@ import com.flowcamp.tab.PhoneListViewAdapter;
 import com.flowcamp.tab.R;
 import com.flowcamp.tab.databinding.FragmentPhoneBinding;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 public class PhoneFragment extends Fragment {
@@ -74,19 +81,46 @@ public class PhoneFragment extends Fragment {
         };
 
         String sortOrder = CommonDataKinds.Phone.DISPLAY_NAME + " COLLATE LOCALIZED ASC";
+        String[] PHOTO_BITMAP_PROJECTION = new String[] {
+                ContactsContract.CommonDataKinds.Photo.PHOTO
+        };
 
         try {
             @SuppressLint("Recycle") Cursor cursor = context.getContentResolver().query(uri, projection, null, null, sortOrder);
             if (cursor.moveToFirst()) {
                 do {
-                    Phone phone = new Phone((int) cursor.getLong(0), cursor.getString(1), cursor.getString(2));
+                    @SuppressLint("Range") long id = cursor.getLong(cursor.getColumnIndex(ContactsContract.Contacts._ID));
+                    Uri photoUri = ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, id);
+                    Bitmap photo = null;
+//                    photo =
+
+                    /*Cursor photoCursor = context.getContentResolver().
+                            query(photoUri, PHOTO_BITMAP_PROJECTION, null, null, null);
+
+                    try {
+                        if (photoCursor.moveToFirst()) {
+                            final byte[] photoBytes = photoCursor.getBlob(0);
+                            if (photoBytes != null) {
+                                photo = BitmapFactory.decodeByteArray(photoBytes, 0, photoBytes.length);
+                            }
+                        }
+                    } finally {
+                        photoCursor.close();
+                    }*/
+
+                    Phone phone = new Phone(
+                            (int) cursor.getLong(0),
+                            cursor.getString(1),
+                            cursor.getString(2),
+                            photo);
                     phoneArrayList.add(phone);
 
                 } while (cursor.moveToNext());
             }
+            cursor.close();
         } catch (SecurityException ignored) {
             ignored.printStackTrace();
-            phoneArrayList.add(new Phone(1, "연락처 접근 권한을 허용해주세요", ""));
+            phoneArrayList.add(new Phone(1, "연락처 접근 권한을 허용해주세요", "", null));
         }
 
         PhoneListViewAdapter adapter = new PhoneListViewAdapter(context, phoneArrayList);
@@ -138,4 +172,5 @@ public class PhoneFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
+
 }
