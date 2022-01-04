@@ -2,6 +2,7 @@ package com.flowcamp.tab.ui.main;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
@@ -32,6 +34,7 @@ import com.flowcamp.tab.PhoneListViewAdapter;
 import com.flowcamp.tab.R;
 import com.flowcamp.tab.databinding.FragmentPhoneBinding;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -68,6 +71,7 @@ public class PhoneFragment extends Fragment {
         pageViewModel.setIndex(index);
     }
 
+    @SuppressLint("WrongThread")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -85,8 +89,8 @@ public class PhoneFragment extends Fragment {
         };
 
         String sortOrder = CommonDataKinds.Phone.DISPLAY_NAME + " COLLATE LOCALIZED ASC";
-        String[] PHOTO_BITMAP_PROJECTION = new String[]{
-                ContactsContract.CommonDataKinds.Photo.PHOTO
+        String[] PHOTO_BITMAP_PROJECTION = new String[] {
+                CommonDataKinds.Photo.PHOTO
         };
 
         try {
@@ -94,23 +98,9 @@ public class PhoneFragment extends Fragment {
             if (cursor.moveToFirst()) {
                 do {
                     @SuppressLint("Range") long id = cursor.getLong(cursor.getColumnIndex(ContactsContract.Contacts._ID));
-                    Uri photoUri = ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, id);
                     Bitmap photo = null;
-//                    photo =
 
-                    /*Cursor photoCursor = context.getContentResolver().
-                            query(photoUri, PHOTO_BITMAP_PROJECTION, null, null, null);
-
-                    try {
-                        if (photoCursor.moveToFirst()) {
-                            final byte[] photoBytes = photoCursor.getBlob(0);
-                            if (photoBytes != null) {
-                                photo = BitmapFactory.decodeByteArray(photoBytes, 0, photoBytes.length);
-                            }
-                        }
-                    } finally {
-                        photoCursor.close();
-                    }*/
+                    photo = getFacebookPhoto(context, cursor.getString(2));
 
                     Phone phone = new Phone(
                             (int) cursor.getLong(0),
@@ -132,6 +122,31 @@ public class PhoneFragment extends Fragment {
 
         ListView listView = (ListView) rootView.findViewById(R.id.list);
         listView.setAdapter(adapter);
+
+        rootView.findViewById(R.id.add_contact).setOnClickListener(
+                view -> {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle("전화번호 추가하기");
+                    LinearLayout layout = new LinearLayout(context);
+                    layout.setOrientation(LinearLayout.VERTICAL);
+
+                    final EditText nameBox = new EditText(context);
+                    nameBox.setHint("이름");
+                    layout.addView(nameBox);
+
+                    final EditText numberBox = new EditText(context);
+                    numberBox.setHint("전화번호");
+                    layout.addView(numberBox);
+
+                    builder.setView(layout);
+
+                    builder.setPositiveButton("추가", (dialog, which) -> addContact(nameBox.getText().toString(), numberBox.getText().toString()));
+                    builder.setNegativeButton("취소", (dialog, which) -> dialog.cancel());
+
+                    builder.show();
+
+                }
+        );
 
         SearchView searchView = (SearchView) rootView.findViewById(R.id.searchContact);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -185,6 +200,37 @@ public class PhoneFragment extends Fragment {
         return rootView;
     }
 
+    public Bitmap getFacebookPhoto(Context context, String phoneNumber) {
+        Uri phoneUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(phoneNumber));
+        Uri photoUri = null;
+        ContentResolver cr = context.getContentResolver();
+        Cursor contact = cr.query(phoneUri,
+                new String[] { ContactsContract.Contacts._ID }, null, null, null);
+
+        Bitmap defaultPhoto = null;
+        if (contact.moveToFirst()) {
+            @SuppressLint("Range") long userId = contact.getLong(contact.getColumnIndex(ContactsContract.Contacts._ID));
+            photoUri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, userId);
+
+        }
+        else {
+//            Bitmap defaultPhoto = BitmapFactory.decodeResource(getResources(), android.R.drawable.ic_menu_report_image);
+            return defaultPhoto;
+        }
+        if (photoUri != null) {
+            InputStream input = ContactsContract.Contacts.openContactPhotoInputStream(
+                    cr, photoUri);
+            if (input != null) {
+                return BitmapFactory.decodeStream(input);
+            }
+        } else {
+//            Bitmap defaultPhoto = BitmapFactory.decodeResource(getResources(), android.R.drawable.ic_menu_report_image);
+            return defaultPhoto;
+        }
+//        Bitmap defaultPhoto = BitmapFactory.decodeResource(getResources(), android.R.drawable.ic_menu_report_image);
+        return defaultPhoto;
+    }
+
     public void addContact(String name, String number) {
         Intent intent = new Intent(
                 ContactsContract.Intents.SHOW_OR_CREATE_CONTACT,
@@ -192,6 +238,7 @@ public class PhoneFragment extends Fragment {
         intent.setData(Uri.parse("tel:" + number));//specify your number here
         intent.putExtra(ContactsContract.Intents.Insert.NAME, name);
         startActivity(intent);
+
     }
 
     @Override
@@ -199,5 +246,4 @@ public class PhoneFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
-
 }
