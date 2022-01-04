@@ -110,14 +110,14 @@ public class TicTacToeFragment extends Fragment implements View.OnClickListener 
             button.setText(playerThatMoved.toString());
 
             if (board.getWinner() != null) {
-                winnerPlayerLabel.setText(playerThatMoved.toString());
+                winnerPlayerLabel.setText(String.format("Winner %s!", playerThatMoved.toString()));
                 winnerPlayerViewGroup.setVisibility(View.VISIBLE);
             } else {
                 Choice choice = board.com_choice();
                 board.mark(choice.getRow(), choice.getColumn(), Player.X);
                 buttons[choice.getRow()][choice.getColumn()].setText(Player.X.toString());
                 if (board.getWinner() != null) {
-                    winnerPlayerLabel.setText(Player.X.toString());
+                    winnerPlayerLabel.setText("Winner X!");
                     winnerPlayerViewGroup.setVisibility(View.VISIBLE);
                 }
             }
