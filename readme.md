@@ -12,9 +12,11 @@ Simple overview of use/purpose.
 
 <p align="center"><img src="./readme_res/tab2.jpg" width=300px></p>
 
-## **특징**
+## **Tech Stack**
 
-- 이미지 비율을 유지한 갤러리 구성을 보여준다
+- Android Cursor를 이용하여 휴대전화 내부 이미지를 가져온다.
+- 다앙한 크기의 cell을 구성하기 위해 TableLayout이 아닌 중첩된 LinearLayout을 사용한다.
+- 이미지 비율을 유지한 갤러리 구성을 보여준다.
 
 ```java
 Queue<String> imageList = ...
@@ -29,7 +31,7 @@ while (imageList.size() > 0) {
 
 ```
 
-- 앱 시작 시 비동기적으로 휴대폰 저장소의 이미지들을 가져온다
+- 앱 시작 시 비동기적으로 휴대폰 저장소의 이미지를 가져온다.
 
 ```java
 private class SetImageTask extends AsyncTask<Object, Void, Boolean> {
@@ -54,7 +56,7 @@ private class SetImageTask extends AsyncTask<Object, Void, Boolean> {
 
 ## **최적화 이슈**
 
-자원이 큰 이미지들을 사용하기 때문에 느리다
+자원이 큰 이미지들을 사용하기 때문에 느리다.
 
 <해결책>
 
@@ -71,3 +73,13 @@ Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
 <p align="center"><img src="./readme_res/tab3.gif" width=300px></p>
 
 - [MiniMax](https://en.wikipedia.org/wiki/Minimax)
+
+# 배운점
+
+```java
+if (StackOverflow == null || Google == null)
+    throw new BrainMeltdownException();
+```
+
+- 커뮤니케이션을 통해 서로 부족한 점과 배운 점을 효과적으로 공유할 수 있다.
+- 프로젝트 방향성에 대한 충분한 논의를 한 뒤에, 프로젝트에 돌입하자. **(방향성을 중간에 바꾸려면 오버헤드가 너무 크다!)**
