@@ -1,8 +1,20 @@
 # 몰입캠프 1주차
+## 프로젝트 내용
+### 공통과제 I (12/28 ~ 1/4) - 탭 구조를 활용한 안드로이드 앱 제작
+- 프로젝트 구성원: [김성준](https://github.com/sjwhole), [정강산](https://github.com/sanu7d0)
 
-Simple overview of use/purpose.
+<br/>
 
-김성준, 정강산
+# Switch between tabs - ViewPager
+```java
+ViewPage viewPager = binding.viewPager;
+viewPager.setAapter(sectionPagerAdapter);
+...
+public class SectionsPagerAdapter extends FragmentPagerAdapter{
+    ...
+}
+```
+ViewPager를 통해 각 탭(**Fragment**)간의 전환을 구현했다.
 
 # TAB 1 - 연락처
 
