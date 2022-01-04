@@ -24,6 +24,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
+import androidx.appcompat.widget.SearchView;
+import androidx.core.view.MenuItemCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -44,6 +46,7 @@ public class PhoneFragment extends Fragment {
     private PageViewModel pageViewModel;
     private FragmentPhoneBinding binding;
     private Context context;
+    private ArrayList<Phone> phoneArrayList;
 
     public PhoneFragment(Context context) {
         this.context = context;
@@ -76,7 +79,7 @@ public class PhoneFragment extends Fragment {
 
         View rootView = inflater.inflate(R.layout.fragment_phone, container, false);
 
-        ArrayList<Phone> phoneArrayList = new ArrayList<>();
+        phoneArrayList = new ArrayList<>();
 
         Uri uri = CommonDataKinds.Phone.CONTENT_URI;
         String[] projection = new String[]{
@@ -119,6 +122,55 @@ public class PhoneFragment extends Fragment {
 
         ListView listView = (ListView) rootView.findViewById(R.id.list);
         listView.setAdapter(adapter);
+
+        rootView.findViewById(R.id.add_contact).setOnClickListener(
+                view -> {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle("전화번호 추가하기");
+                    LinearLayout layout = new LinearLayout(context);
+                    layout.setOrientation(LinearLayout.VERTICAL);
+
+                    final EditText nameBox = new EditText(context);
+                    nameBox.setHint("이름");
+                    layout.addView(nameBox);
+
+                    final EditText numberBox = new EditText(context);
+                    numberBox.setHint("전화번호");
+                    layout.addView(numberBox);
+
+                    builder.setView(layout);
+
+                    builder.setPositiveButton("추가", (dialog, which) -> addContact(nameBox.getText().toString(), numberBox.getText().toString()));
+                    builder.setNegativeButton("취소", (dialog, which) -> dialog.cancel());
+
+                    builder.show();
+
+                }
+        );
+
+        SearchView searchView = (SearchView) rootView.findViewById(R.id.searchContact);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                for (int i = 0; i < phoneArrayList.size(); i++) {
+                    if (phoneArrayList.get(i).getName().contains(query)) {
+                        listView.setSelection(i);
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                for (int i = 0; i < phoneArrayList.size(); i++) {
+                    if (phoneArrayList.get(i).getName().contains(newText)) {
+                        listView.setSelection(i);
+                        break;
+                    }
+                }
+                return true;
+            }
+        });
 
         rootView.findViewById(R.id.add_contact).setOnClickListener(
                 view -> {
@@ -194,5 +246,4 @@ public class PhoneFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
-
 }
