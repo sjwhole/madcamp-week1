@@ -1,8 +1,20 @@
 # 몰입캠프 1주차
 
-Simple overview of use/purpose.
-
 김성준, 정강산
+
+# Switch between tabs - ViewPager
+
+```java
+ViewPage viewPager = binding.viewPager;
+viewPager.setAapter(sectionPagerAdapter);
+...
+
+public class SectionsPagerAdapter extends FragmentPagerAdapter{
+    ...
+}
+```
+
+ViewPager를 통해 각 탭(**Fragment**)간의 전환을 구현했다.
 
 # TAB 1 - 연락처
 
