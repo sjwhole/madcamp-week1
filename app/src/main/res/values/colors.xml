@@ -7,4 +7,10 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="cultured">#FFF6F4F3</color>
+    <color name="celticBlue">#FF276FBF</color>
+    <color name="spaceCadet">#FF183059</color>
+    <color name="viridian">#FF56876D</color>
+    <color name="darkSpringGreen">#FF04724D</color>
 </resources>
