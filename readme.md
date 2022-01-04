@@ -4,84 +4,70 @@ Simple overview of use/purpose.
 
 김성준, 정강산
 
-## Description
+# TAB 1 - 연락처
 
-An in-depth paragraph about your project and overview of use.
+<p align="center"><img src="./readme_res/tab1.jpg" width=300px></p>
 
-## Getting Started
+# TAB 2 - 갤러리
 
-### Dependencies
+<p align="center"><img src="./readme_res/tab2.jpg" width=300px></p>
 
-- Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-- ex. Windows 10
+## **특징**
 
-### Installing
+- 이미지 비율을 유지한 갤러리 구성을 보여준다
 
-- How/where to download your program
-- Any modifications needed to be made to files/folders
+```java
+Queue<String> imageList = ...
 
-### Executing program
+while (imageList.size() > 0) {
+    double ratio1 = (double)bitmap1.getWidth() / bitmap1.getHeight();
+    ...
+    double ratio2 = (double)bitmap2.getWidth() / bitmap2.getHeight();
 
-- How to run the program
-- Step-by-step bullets
-
-```
-code blocks for commands
-```
-
-## Help
-
-Any advise for common problems or issues.
+    // ratio1 과 ratio2를 비교, 적절한 배치를 결정
+}
 
 ```
-command to run if program contains helper info
+
+- 앱 시작 시 비동기적으로 휴대폰 저장소의 이미지들을 가져온다
+
+```java
+private class SetImageTask extends AsyncTask<Object, Void, Boolean> {
+    private Queue<String> imagePaths;
+    ...
+
+    @Override
+    // Set thread
+    protected Boolean doInBackground(Object... params) {
+        ...
+        setImages(mRootView, imagePaths);
+        return true;
+    }
+
+    @Override
+    // Called when task done
+    protected void onPostExecute(Boolean aBoolean) {
+        super.onPostExecute(aBoolean);
+        ...
+    }
 ```
 
-## Authors
+## **최적화 이슈**
 
-Contributors names and contact info
+자원이 큰 이미지들을 사용하기 때문에 느리다
 
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
+<해결책>
 
-## Version History
+1. 이미지 리사이즈 (구현)
 
-- 0.2
-  - Various bug fixes and optimizations
-  - See [commit change]() or See [release history]()
-- 0.1
-  - Initial Release
+```java
+Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
+```
 
-## License
+2. 현재 보이는 이미지들과 주변 이미지들만 캐싱 (미구현)
 
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
+# TAB 3 - 틱택토 게임
 
-## Acknowledgments
+<p align="center"><img src="./readme_res/tab3.gif" width=300px></p>
 
-Inspiration, code snippets, etc.
-
-- [awesome-readme](https://github.com/matiassingers/awesome-readme)
-- [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-- [dbader](https://github.com/dbader/readme-template)
-- [zenorocha](https://gist.github.com/zenorocha/4526327)
-- [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
 - [MiniMax](https://en.wikipedia.org/wiki/Minimax)
-
-## TAB 1 - 연락처
-
-<img src="./readme_res/tab1.jpg" width=250px>
-ㅁㅁㅁ
-
-## TAB 2 - 갤러리
-
-<img src="./readme_res/tab2.jpg" width=250px>
-
-- AsyncTask 클래스 이용 -> 비동기적으로 갤러리의 이미지들을 로드한다.
-- 이미지의 비율을 유지한 갤러리 구성을 보여준다
-
-## TAB 3 - 틱택토 게임
-
-<img src="./readme_res/tab3.jpg" width=250px>
-
-ㅁㅁ
-ㅁ
